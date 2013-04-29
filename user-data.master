@@ -1,0 +1,62 @@
+#! /bin/bash
+
+# Abort if any command exits without success ($? > 0)
+set -e
+# As bash executes the script, abort if an undefined variable is used
+set -u
+# Show each command as it is executed
+set -x
+
+# This script is responsible for installing the Puppet Master using an answers file.
+
+# If the ~/puppet-enterprise-installer directory does not exist, then...
+if ! [[ -d ~ec2-user/puppet-enterprise-installer ]]; then
+  echo "UH OH...  ~ec2-user/puppet-enterprise-installer does not exist. Aborting"
+  exit 1
+fi
+
+cd ~ec2-user/puppet-enterprise-installer
+
+cat > answers.master <<END_OF_ANSWERS
+q_install=y
+q_puppet_cloud_install=y
+q_puppet_enterpriseconsole_auth_database_name=console_auth
+q_puppet_enterpriseconsole_auth_database_password=3XacKvIbF6sth4dpgImR
+q_puppet_enterpriseconsole_auth_database_user=console_auth
+q_puppet_enterpriseconsole_auth_password=12345password
+q_puppet_enterpriseconsole_auth_user_email=admin@puppetlabs.com
+q_puppet_enterpriseconsole_database_install=y
+q_puppet_enterpriseconsole_database_name=console
+q_puppet_enterpriseconsole_database_password=e9eIkPf4lBZLQ2Z9tnJ8
+q_puppet_enterpriseconsole_database_remote=n
+q_puppet_enterpriseconsole_database_root_password=FqYooKH9GyDNSK3dZYN4
+q_puppet_enterpriseconsole_database_user=console
+q_puppet_enterpriseconsole_httpd_port=443
+q_puppet_enterpriseconsole_install=y
+q_puppet_enterpriseconsole_inventory_hostname=$(hostname)
+q_puppet_enterpriseconsole_inventory_port=8140
+q_puppet_enterpriseconsole_master_hostname=$(hostname)
+q_puppet_enterpriseconsole_smtp_host=smtp.gmail.com
+q_puppet_enterpriseconsole_smtp_password=
+q_puppet_enterpriseconsole_smtp_port=25
+q_puppet_enterpriseconsole_smtp_use_tls=n
+q_puppet_enterpriseconsole_smtp_user_auth=n
+q_puppet_enterpriseconsole_smtp_username=
+q_puppet_symlinks_install=y
+q_puppetagent_certname=puppetmaster
+q_puppetagent_install=y
+q_puppetagent_server=$(hostname)
+q_puppetca_install=y
+q_puppetmaster_certname=puppetmaster
+q_puppetmaster_dnsaltnames=puppet,puppetmaster,$(hostname),$(hostname -f),$(curl http://169.254.169.254/latest/meta-data/public-hostname)
+q_puppetmaster_enterpriseconsole_hostname=localhost
+q_puppetmaster_enterpriseconsole_port=443
+q_puppetmaster_install=y
+q_vendor_packages_install=y
+q_verify_packages=y
+END_OF_ANSWERS
+
+./puppet-enterprise-installer -a answers.master
+
+echo "Finished installing Puppet Enterprise from user-data cloud init"
+exit 0
